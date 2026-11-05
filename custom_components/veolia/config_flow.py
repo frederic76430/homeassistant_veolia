@@ -1,0 +1,140 @@
+"""Config flow for veolia integration."""
+
+from urllib.parse import urlparse
+
+import aiohttp
+from veolia_api import VeoliaAPI
+from veolia_api.exceptions import VeoliaAPIInvalidCredentialsError
+from veolia_api.portals import VEOLIA_PORTAL_CLIENTS
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import COMMUNE_LOOKUP_URL, CONF_PORTAL_URL, DOMAIN, LOGGER
+
+
+class VeoliaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+    """Config flow for veolia."""
+
+    VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize."""
+        self._errors = {}
+        self._postal_code = None
+        self._communes = []
+        self._portal_url: str | None = None
+
+    async def async_step_user(self, user_input=None) -> dict:
+        """Handle a flow initialized by the user."""
+        self._errors = {}
+
+        if user_input is not None:
+            self._postal_code = user_input["postal_code"]
+            return await self.async_step_select_commune()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required("postal_code"): str}),
+            errors=self._errors,
+        )
+
+    async def async_step_select_commune(self, user_input=None) -> dict:
+        """Handle the selection of a commune."""
+        LOGGER.debug("Check city postal to for integration compatibility")
+        if user_input is not None:
+            selected_commune = next(
+                (
+                    commune
+                    for commune in self._communes
+                    if commune["libelle"] == user_input["commune"]
+                ),
+                None,
+            )
+            if (
+                selected_commune
+                and selected_commune.get("type_commune") == "NON_REDIRIGE"
+            ):
+                self._portal_url = None
+                return await self.async_step_credentials()
+
+            if selected_commune and selected_commune.get("type_commune") == "REDIRIGE":
+                url_redirection = selected_commune.get("url_redirection", "")
+                hostname = urlparse(url_redirection).hostname or ""
+                if hostname in VEOLIA_PORTAL_CLIENTS:
+                    self._portal_url = hostname
+                    return await self.async_step_credentials()
+                self._errors["base"] = "commune_not_supported"
+            elif (
+                selected_commune
+                and selected_commune.get("type_commune") == "NON_DESSERVIE"
+            ):
+                self._errors["base"] = "commune_not_veolia"
+            else:
+                self._errors["base"] = "commune_not_supported"
+
+        LOGGER.debug("Fetching communes for postal code %s", self._postal_code)
+        session = async_get_clientsession(self.hass)
+        try:
+            response = await session.get(f"{COMMUNE_LOOKUP_URL}{self._postal_code}")
+            response.raise_for_status()
+            self._communes = await response.json()
+        except aiohttp.ClientError:
+            LOGGER.exception("Failed to fetch communes")
+            self._errors["base"] = "unknown"
+            self._communes = []
+        else:
+            LOGGER.debug("Communes found: %s", self._communes)
+
+        if not self._communes:
+            self._errors["base"] = self._errors.get("base") or "no_communes_found"
+
+        commune_options = {
+            commune["libelle"]: commune["libelle"] for commune in self._communes
+        }
+
+        return self.async_show_form(
+            step_id="select_commune",
+            data_schema=vol.Schema({vol.Required("commune"): vol.In(commune_options)}),
+            errors=self._errors,
+        )
+
+    async def async_step_credentials(self, user_input=None) -> dict:
+        """Handle the input of credentials."""
+        LOGGER.debug("Request credentials")
+        if user_input is not None:
+            try:
+                api = VeoliaAPI(
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                    async_get_clientsession(self.hass),
+                    portal_url=self._portal_url,
+                )
+                valid = await api.login()
+
+                if valid:
+                    return self.async_create_entry(
+                        title=user_input[CONF_USERNAME],
+                        data={**user_input, CONF_PORTAL_URL: self._portal_url},
+                    )
+            except VeoliaAPIInvalidCredentialsError:
+                self._errors["base"] = "invalid_credentials"
+            except Exception:  # noqa: BLE001
+                LOGGER.debug("Unknown exception")
+                self._errors["base"] = "unknown"
+
+            return await self._show_credentials_form(user_input)
+
+        return await self._show_credentials_form(user_input)
+
+    async def _show_credentials_form(self, user_input) -> dict:
+        """Show the configuration form to input credentials."""
+        return self.async_show_form(
+            step_id="credentials",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str},
+            ),
+            errors=self._errors,
+        )

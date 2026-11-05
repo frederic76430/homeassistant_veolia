@@ -1,0 +1,92 @@
+{
+  "title": "Veolia",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuration Veolia",
+        "description": "Afin de tester la compatibilité de votre compte Veolia avec cette intégration, veuillez saisir votre code postal :",
+        "data": {
+          "postal_code": "Code postal"
+        }
+      },
+      "select_commune": {
+        "title": "Sélection de la commune",
+        "description": "",
+        "data": {
+          "commune": "Veuillez sélectionner votre commune dans la liste ci-dessous :"
+        }
+      },
+      "credentials": {
+        "title": "Informations d'identification",
+        "description": "Bonne nouvelle, votre compte Veolia fonctionne avec cette intégration. Veuillez entrer vos informations de connexion Veolia :",
+        "data": {
+          "username": "Nom d'utilisateur",
+          "password": "Mot de passe"
+        }
+      }
+    },
+    "error": {
+      "invalid_credentials": "Nom d'utilisateur ou mot de passe incorrect",
+      "unknown": "Impossible de se connecter, consultez les journaux pour plus d'informations",
+      "commune_not_supported": "Désolé votre compte Veolia n'est pas supportée par cette intégration. Vous devez attendre la migration vers le nouveau site (cette étape dépend uniquement de Veolia) Une fois la migration effectuée, veuillez réessayer.",
+      "no_communes_found": "Aucune commune trouvée pour ce code postal",
+      "commune_not_veolia": "Veolia ne fournit pas d'eau dans cette commune",
+      "no_account": "Aucun compte Veolia trouvé pour ce code postal"
+    },
+    "abort": {
+      "already_configured": "Ce compte est déjà configuré"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "veolia_index": {
+        "name": "Index compteur"
+      },
+      "daily_consumption": {
+        "name": "Conso journalière"
+      },
+      "monthly_consumption": {
+        "name": "Conso mensuelle"
+      },
+      "annual_consumption": {
+        "name": "Conso annuelle"
+      },
+      "last_consumption_date": {
+        "name": "Dernier relevé"
+      },
+      "last_day_consumption": {
+        "name": "Conso dernier jour"
+      }
+    },
+    "switch": {
+      "daily_sms_alert_switch": {
+        "name": "SMS alerte journalière"
+      },
+      "monthly_sms_alert_switch": {
+        "name": "SMS alerte mensuelle"
+      },
+      "unoccupied_alert_switch": {
+        "name": "Alerte logement vide"
+      }
+    },
+    "text": {
+      "daily_threshold_text": {
+        "name": "Seuil alerte journalière (en L)"
+      },
+      "monthly_threshold_text": {
+        "name": "Seuil alerte mensuelle (en M3)"
+      }
+    },
+    "binary_sensor": {
+      "daily_alert_binary_sensor": {
+        "name": "Alerte conso journalière"
+      },
+      "monthly_alert_binary_sensor": {
+        "name": "Alerte conso mensuelle"
+      },
+      "unoccupied_alert_binary_sensor": {
+        "name": "Alerte logement vide"
+      }
+    }
+  }
+}

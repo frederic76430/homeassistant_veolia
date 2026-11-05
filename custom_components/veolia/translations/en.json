@@ -1,0 +1,92 @@
+{
+  "title": "Veolia",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Veolia configuration",
+        "description": "To test the compatibility of your Veolia account with this integration, please enter your postal code:",
+        "data": {
+          "postal_code": "Postal code"
+        }
+      },
+      "select_commune": {
+        "title": "Select your commune",
+        "description": "",
+        "data": {
+          "commune": "Please select your commune from the list below :"
+        }
+      },
+      "credentials": {
+        "title": "Credentials",
+        "description": "Good news, your Veolia account works with this integration. Please enter your Veolia login credentials:",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_credentials": "Invalid username or password",
+      "unknown": "Unable to connect, check the logs for more information",
+      "commune_not_supported": "Sorry, your Veolia account is not supported. You must wait for the migration to the new site.",
+      "no_communes_found": "No communes found for this postal code",
+      "commune_not_veolia": "Veolia does not provide water in this commune",
+      "no_account": "No Veolia account found for this postal code"
+    },
+    "abort": {
+      "already_configured": "This account is already configured"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "veolia_index": {
+        "name": "Consumption index"
+      },
+      "daily_consumption": {
+        "name": "Daily consumption"
+      },
+      "monthly_consumption": {
+        "name": "Monthly consumption"
+      },
+      "annual_consumption": {
+        "name": "Annual consumption"
+      },
+      "last_consumption_date": {
+        "name": "Last reading"
+      },
+      "last_day_consumption": {
+        "name": "Last day consumption"
+      }
+    },
+    "switch": {
+      "daily_sms_alert_switch": {
+        "name": "SMS daily alert"
+      },
+      "monthly_sms_alert_switch": {
+        "name": "SMS monthly alert"
+      },
+      "unoccupied_alert_switch": {
+        "name": "Unoccupied alert"
+      }
+    },
+    "text": {
+      "daily_threshold_text": {
+        "name": "Daily threshold alert"
+      },
+      "monthly_threshold_text": {
+        "name": "Monthly threshold alert"
+      }
+    },
+    "binary_sensor": {
+      "daily_alert_binary_sensor": {
+        "name": "Daily consumption alert"
+      },
+      "monthly_alert_binary_sensor": {
+        "name": "Monthly consumption alert"
+      },
+      "unoccupied_alert_binary_sensor": {
+        "name": "Unoccupied alert"
+      }
+    }
+  }
+}
